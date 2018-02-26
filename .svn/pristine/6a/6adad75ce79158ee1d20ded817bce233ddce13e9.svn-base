@@ -1,0 +1,802 @@
+<template>
+<div class="info-container">
+    <header class="tab-row" @click='toggleStatistic'>
+        <span class="tab">统计中心</span>
+        <span class='tab active'>老人需求统计</span>
+    </header>
+
+    <main class='page-content'>
+
+        <el-form class='infos' :model="userForm" inline label-width="120px" label-position="left" v-if='type !== 1'>
+            <el-row class="m-l">
+                <limitArea ref="area" @select-change="selectChange" :num='5' v-if='type === 2'></limitArea>
+                <cityArea ref="area" title="服务区域" @select-change="selectChange" curNum="0" v-if='type === 0'></cityArea>
+            </el-row>
+            <el-row>
+                <el-form-item label="服务机构">
+                    {{orgName}}
+                    <el-button class="button" type="primary" @click="chooseOrg">选择服务机构</el-button>
+                </el-form-item>
+                <el-button class="button" type="primary" @click="reSet">重置</el-button>
+            </el-row>
+        </el-form>
+        <div class="infos">
+
+            <div class="btn_box">
+                <el-row>
+
+                    <el-button type="primary" id='excel' @click='toggleType(0)'>
+
+                        <svg class="icon" aria-hidden="true">
+                            <use xlink:href="#icon-Excel"></use>
+                        </svg>EXCEL表单展示
+
+                    </el-button>
+
+                    <el-button id='echart' @click='toggleType(1)'>
+
+                        <svg class="icon" aria-hidden="true">
+        
+                            <use xlink:href="#icon-tubiao"></use>
+
+                        </svg>图标展示
+
+                    </el-button>
+                    <div class="wrapper" v-show='excel'>
+
+                        <img class='full_icon' @click='toFull(0)' src="./full.png">
+
+                        <el-table
+                            :data="tableData1"
+                            border
+                            style="width: 100%">
+                            <el-table-column align='center' v-for='(item, key) of dict' :key='key' :prop='item.english' :label="item.cn" width="140">
+                            </el-table-column>
+                        </el-table>
+
+                    </div>
+                </el-row>
+
+            </div>
+
+            <div class='box'>
+                <div class="wrapper wrapper_data" ref='data_tv' v-show='!excel'>
+
+                    <div class="main_wrapper">
+
+                        <div id="main" style="width: 800px;height:600px;"></div>
+
+                        <div id="main1" style="width: 800px;height:600px;"></div>
+
+                    </div>
+
+                    <div class='fullwrapper' v-show='notFull'>
+
+                        <el-select v-model="value" placeholder="请选择">
+
+                            <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+
+                            </el-option>
+
+                        </el-select>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <org-choose v-if="showOrg" @pop-click="setOrgInfo" :areaData="userForm">
+    </org-choose>
+
+</div>
+</template>
+<script>
+import limitArea from '@/components/limitArea.vue';
+import cityArea from '@/components/ServiceArea.vue';
+import orgChoose from '@/components/OrgChoose.vue';
+import '../../common/iconfont.js'
+
+export default {
+
+    data() {
+
+        return {
+            excel: true,
+            options: [
+                {
+
+                    value: 1,
+
+                    label: '个人生活照料服务'
+
+                }, {
+
+                    value: 2,
+
+                    label: '老年护理服务'
+
+                }, {
+
+                    value: 3,
+
+                    label: '协助医疗护理服务'
+
+                }, {
+
+                    value: 4,
+
+                    label: '医疗保健服务'
+
+                }, {
+
+                    value: 5,
+
+                    label: '养生服务'
+
+                }, {
+
+                    value: 6,
+
+                    label: '心理精神支持服务'
+
+                }, {
+
+                    value: 7,
+
+                    label: '膳食服务'
+
+                }, {
+
+                    value: 8,
+
+                    label: '教育服务'
+
+                }, {
+
+                    value: 9,
+
+                    label: '休闲娱乐服务'
+
+                }, {
+
+                    value: 10,
+
+                    label: '环境卫生服务'
+
+                }, {
+
+                    value: 11,
+
+                    label: '洗涤服务'
+
+                }, {
+
+                    value: 12,
+
+                    label: '安全保护服务'
+
+                }, {
+
+                    value: 13,
+
+                    label: '助行服务'
+
+                }, {
+
+                    value: 14,
+
+                    label: '咨询服务'
+
+                }, {
+
+                    value: 15,
+
+                    label: '委托代办服务'
+
+                }, {
+
+                    value: 16,
+
+                    label: '通讯服务'
+
+                }, {
+
+                    value: 17,
+
+                    label: '其他服务'
+
+                }, {
+
+                    value: 18,
+
+                    label: '总需求数'
+
+                }, {
+
+                    value: 19,
+
+                    label: '各村镇需求占比'
+
+                }, {
+
+                    value: 20,
+
+                    label: '总人数'
+
+                }
+            ],
+            value: 1,
+            notFull: true,
+            orgName: '',
+            userForm: {
+                orgId: window._dataInfo.orgId,
+                provinceId: window._dataInfo.provinceId,
+                cityId: window._dataInfo.cityId,
+                countryId: window._dataInfo.countryId,
+                streetId: window._dataInfo.streetId,
+            },
+            tableData: [],
+            showOrg: false,
+            tableDataExcel: 1,
+            totleNum: 0,
+            type: window._dataInfo.type,
+            tableData1: [],
+            dict: [
+                {
+                    english: 'StreetName',
+                    cn: '乡镇\\服务'
+                },
+                {
+                    english: 'assistedMedical',
+                    cn: "协助医疗护理服务"
+                },{
+                    english: 'communication',
+                    cn: "通讯服务"
+                },{
+                    english: 'consultation',
+                    cn: "咨询服务"
+                },{
+                    english: 'diet',
+                    cn: "膳食服务"
+                },{
+                    english: 'entrust',
+                    cn: "委托代办服务"
+                },{
+                    english: 'environment',
+                    cn: "环境卫生服务"
+                },{
+                    english: 'forHelp',
+                    cn: "助行服务"
+                },{
+                    english: 'health',
+                    cn: "养生服务"
+                },{
+                    english: 'leisure',
+                    cn: "休闲娱乐服务"
+                },{
+                    english: 'medicalCare',
+                    cn: "医疗保健服务"
+                },{
+                    english: 'other',
+                    cn: "其他"
+                },{
+                    english: 'personalLife',
+                    cn: "个人生活照料类"
+                },{
+                    english: 'psychologicalSupport',
+                    cn: '心理精神支持服务'
+                },{
+                    english: 'security',
+                    cn: '安全保护服务'
+                },{
+                    english: 'teach',
+                    cn: '教育服务'
+                },{
+                    english: 'wash',
+                    cn: '洗涤服务'
+                }
+            ],
+            initKey: 1
+        }
+
+    },
+    created () {
+        this._getExcel()
+    },
+
+    components: {
+        limitArea,
+        cityArea,
+        orgChoose
+    },
+
+    methods: {
+        _getData (n) {
+            // 树状图
+            let initData = []
+            // 饼状图
+            let initData1 = []
+            // let item = this.tableData1[n]
+            this.tableData1.forEach(item => {
+                initData.push(item[n])
+                initData1.push({
+                    value: item[n],
+                    name: item['StreetName']
+                })
+            })
+            this.canvasData = initData
+            this.canvasData1 = initData1
+            this._initCanvas()
+        },
+        _initCanvas() {
+            this.myChart = echarts.init(document.getElementById('main'))
+
+            this.myChart1 = echarts.init(document.getElementById('main1'))
+            
+            let option = {
+                tooltip: {
+
+                    trigger: 'item',
+
+                    formatter: "{a} <br/>{b} : {c}"
+
+                },
+
+                xAxis: {
+
+                    data: ["城厢镇", "大同镇", "大弯街道", "福洪乡", "红阳街道", "龙王镇", "弥牟镇", "清泉镇", "人和乡", "祥福镇", "姚渡镇"]
+
+                },
+
+                yAxis: {},
+
+                series: [{
+
+                    name: '个人生活照料服务',
+
+                    type: 'bar',
+
+                    itemStyle: {
+
+                        normal: {
+
+                            color: '#409EFF'
+
+                        }
+
+                    },
+
+                    data: this.canvasData
+
+                }]
+
+            }
+
+            let option1 = {
+
+                xAxis: {
+
+                    show: false
+
+                },
+
+                yAxis: {
+
+                    show: false
+
+                },
+
+                tooltip : {
+                    trigger: 'item',
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+                },
+
+                series: [{
+
+                    name: '个人生活照料服务',
+
+                    type: 'pie',
+
+                    data: this.canvasData1,
+
+                    roseType: 'area',
+
+                    radius: [30, 110],
+
+                    center: ['75%', '50%']
+
+                }]
+
+            }
+
+            this.myChart.setOption(option)
+
+            this.myChart1.setOption(option1)
+        },
+        toggleStatistic(e) {
+            if (e.target.innerHTML === '统计中心') {
+                this.$router.push('/integratedMana/statistical')
+            }
+        },
+        toggleType(idx) {
+
+            if (idx === 1) {
+
+                $('#excel').removeClass('el-button--primary').addClass('el-button--default')
+
+                $('#echart').removeClass('el-button--default').addClass('el-button--primary')
+
+                this.excel = false
+
+                this._getData(this.dict[this.initKey].english)
+
+            } else {
+
+                $('#echart').removeClass('el-button--primary').addClass('el-button--default')
+
+                $('#excel').removeClass('el-button--default').addClass('el-button--primary')
+
+                this.excel = true
+
+            }
+
+        },
+        toFull(idx) {
+
+            if (idx === 0) {
+
+                const el = this.$refs.data_excel
+
+                if (screenfull.enabled) {
+
+                    screenfull.request(el)
+
+                }
+
+            } else if (idx === 1) {
+
+                const el = this.$refs.data_tv
+
+                if (screenfull.enabled) {
+
+                    screenfull.request(el)
+
+                }
+
+            }
+
+            if (screenfull.enabled) {
+
+                screenfull.on('change', () => {
+
+                    this.notFull = screenfull.isFullscreen ? false : true
+
+                });
+
+            }
+
+        },
+        reSet() {
+            //清空区域数据
+            this.$refs.area.reSet();
+            this.orgName = '';
+            this.userForm.orgId = '';
+        },
+        selectChange(areaData) {
+            let serviceArea = this.userForm;
+            serviceArea.provinceId = areaData.provinceId;
+            serviceArea.cityId = areaData.cityId;
+            serviceArea.countryId = areaData.areaId;
+            serviceArea.streetId = areaData.streetId;
+        },
+        //选择机构弹框
+        chooseOrg() {
+            this.showOrg = true;
+        },
+        //获取选中机构信息
+        setOrgInfo(org) {
+            if (org) {
+                this.userForm.orgId = org.id;
+                this.orgName = org.name;
+                //获取数据
+                this.getLists();
+            }
+            this.showOrg = false;
+        },
+        async getLists() {
+            // try {
+            //     let res = await this.$http.post('/jay/data/statisticsData', this.userForm);
+            //     let data = res.data.data
+            //     this.info = data.list;
+            //     this.time = data.date;
+            //     this.tableData = [{
+            //         workerCount: this.info.workerCount,
+            //         userCount: this.info.userCount,
+            //         orgCount: this.info.orgCount,
+            //     }];
+            // } catch (e) {
+            //     console.log(e);
+            // }
+        },
+        _getExcel() {
+            this.$http.get(`/jay/data/statisticsToExcel?orgId=${this.userForm.orgId}`).then(res => {
+                if (res.data.errCode === 0) {
+                    this.tableData1 = res.data.data
+                }
+            })
+        }
+    },
+
+    watch: {
+
+        value() {
+
+            let x = this.value
+
+            let option
+
+            let option1
+
+            let name
+            console.log(this.options[x].label)
+            this.dict.forEach(item => {
+                if (item.cn === this.options[x].label) {
+                    this._getData(item.english)
+                    name = item.cn
+                }
+            })
+
+            option = {
+
+                tooltip: {
+
+                    trigger: 'item',
+
+                    formatter: "{a} <br/>{b} : {c}"
+
+                },
+
+                xAxis: {
+
+                    data: ["城厢镇", "大同镇", "大弯街道", "福洪乡", "红阳街道", "龙王镇", "弥牟镇", "清泉镇", "人和乡", "祥福镇", "姚渡镇"],
+
+                    show: true
+
+                },
+
+                yAxis: {
+
+                    show: true
+
+                },
+
+                series: [{
+
+                    name,
+
+                    type: 'bar',
+
+                    data: this.canvasData
+
+                }]
+
+            }
+
+            option1 = {
+
+                xAxis: {
+
+                    show: false
+
+                },
+
+                yAxis: {
+
+                    show: false
+
+                },
+
+                tooltip: {
+
+                    trigger: 'item',
+
+                    formatter: "{a} <br/>{b} : {c} ({d}%)"
+
+                },
+
+                series: [{
+
+                    name: '个人生活照料服务',
+
+                    type: 'pie',
+
+                    data: this.canvasData1
+
+                }]
+
+            }
+
+            this.myChart.setOption(option)
+
+            this.myChart1.setOption(option1)
+
+        },
+        orgName () {
+            this.$http.post('/apis/data/statisticsGraphics', {
+                orgId: this.userForm.orgId,
+                serviceDemand: 1
+            }).then(res =>{
+                console.log(res)
+            })
+        }
+    }
+}
+</script>
+
+<style lang="scss" scoped>
+    .info-container {
+        font-family: PingFangSC-Medium, "PingFang SC", "Microsoft YaHei", "\5FAE\8F6F\96C5\9ED1", "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;
+        padding-top: 15px;
+        position: relative;
+    }
+
+    .tab-row {
+        border-bottom: 1px solid #d1dbe5;
+    }
+
+    .tab {
+        bottom: -1px;
+        position: relative;
+        padding: 0 30px;
+        border: 1px solid #d1dbe5;
+        border-radius: 4px 4px 0 0;
+        display: inline-block;
+        line-height: 40px;
+        font-size: 18px;
+        color: #616d80;
+        cursor: pointer;
+    }
+
+    .tab.active {
+        border-bottom: 1px solid #fff;
+    }
+
+    .page-content {
+        border: 1px solid #d1dbe5;
+        border-top: 0;
+    }
+
+    .info {
+        height: 100vh;
+        width: 100vw;
+        box-sizing: border-box;
+        margin-top: -1px;
+        padding-top: 10px;
+        padding-left: 38px;
+        padding-bottom: 50px;
+    }
+
+    .wrapper {
+        margin-top: 50px;
+        position: relative;
+    }
+
+    .wrapper_data {
+        position: relative;
+        display: flex;
+        flex-flow: row nowrap;
+    }
+
+    .full_icon {
+        position: absolute;
+        top: 0;
+        right: 300px;
+        height: 36px;
+    }
+
+    .main_wrapper {
+        display: flex;
+        flex-flow: row nowrap;
+        margin-top: 50px;
+    }
+
+    .fullwrapper {
+        position: absolute;
+        top: 0;
+        right: 300px;
+        display: flex;
+        flex-flow: row nowrap;
+    }
+
+    .fullwrapper img {
+        margin-left: 10px;
+        height: 36px;
+    }
+
+    .icon {
+        width: 1em;
+        height: 1em;
+        vertical-align: -0.15em;
+        fill: currentColor;
+        overflow: hidden;
+        margin-right: 4px;
+    }
+
+    .excelImg {
+        width: 70%;
+    }
+
+    .infos {
+        margin-top: 10px;
+        border: 1px solid #d9d3f8;
+        background-color: #fbfbfb;
+        padding-top: 10px;
+        padding-left: 38px;
+        padding-bottom: 50px;
+        .show-info {
+            h5 {
+                font-size: 22px;
+                font-family: PingFangSC-Medium;
+                color: #616D80;
+                border-left: 2px solid #D8D8D8;
+                padding-left: 14px;
+                margin-bottom: 75px;
+            }
+            ul {
+                margin-bottom: 50px;
+                li {
+                    float: left;
+                    width: 384px;
+                    height: 245px;
+                    margin-left: 20px;
+                    background-size: cover;
+                    .title {
+                        margin-top: 34px;
+                        margin-left: 50px;
+                        font-family: PingFangSC-Medium;
+                        font-size: 26px;
+                        color: #616D80;
+                    }
+                    .order {
+                        margin-top: 46px;
+                        font-family: Dosis-Medium;
+                        font-size: 30px;
+                        color: #5D656F;
+                        margin-left: 47px;
+                    }
+                    .cash {
+                        margin-top: 65px;
+                        font-family: PingFangSC-Medium;
+                        font-size: 30px;
+                        color: #B2BFD1;
+                        margin-left: 44px;
+                    }
+                }
+                li.left {
+                    background-image: url("//static.17link.cc/mp/history.png");
+                }
+                li.middle {
+                    .title {
+                        margin-top: 31px;
+                        margin-left: 66px;
+                    }
+                    .order {
+                        margin-left: 64px;
+                    }
+                    .cash {
+                        margin-left: 66px;
+                    }
+                    background-image: url("//static.17link.cc/mp/newOrder.png");
+                }
+                li.right {
+                    background-image: url("//static.17link.cc/mp/doneOrder.png");
+                }
+            }
+        }
+    }
+</style>

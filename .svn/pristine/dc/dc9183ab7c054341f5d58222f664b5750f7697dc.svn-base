@@ -1,0 +1,72 @@
+<template>
+  <scroll-bar class='container'>
+    <hamburger class="hamburger-container" :toggleClick="toggleSideBar" :isActive="sidebar.opened"></hamburger>
+    <el-menu mode="vertical" unique-opened :default-active="$route.path" :collapse="isCollapse" background-color="#0091DC" text-color="#fff">
+      <sidebar-item :routes="routes"></sidebar-item>
+    </el-menu>
+  </scroll-bar>
+</template>
+
+<script>
+import { mapGetters } from 'vuex'
+import SidebarItem from './SidebarItem'
+import Hamburger from '@/components/Hamburger'
+import ScrollBar from '@/components/ScrollBar'
+
+export default {
+  components: { SidebarItem, ScrollBar, Hamburger },
+  methods: {
+    toggleSideBar() {
+      this.$store.dispatch('ToggleSideBar')
+    }
+  },
+  data () {
+    return {
+      path: ''
+    }
+  },
+  computed: {
+    ...mapGetters([
+      'sidebar'
+    ]),
+    routes() {
+      return this.$router.options.routes
+    },
+    isCollapse() {
+      return !this.sidebar.opened
+    },
+  },
+  // watch: {
+  //   $route (newVal) {
+  //     // 取newVal的prefix_url
+  //     let baseUrl = newVal.matched[0].path
+  //     let path = newVal.path.substring(baseUrl.length + 1)
+  //     this.routes.forEach(item => {
+  //       if (item.path === baseUrl) {
+  //         if (item.children && item.children.length) {
+  //           item.children.forEach((x, k, arr) => {
+  //             if (x.path === path) {
+  //               if (!x.hidden) {
+  //                 this.path = newVal.path
+  //               } else {
+  //                 console.log('hidden')
+  //                 while (arr[k].hidden) {
+  //                   k--
+  //                 }
+  //                 this.path = `${baseUrl}/${arr[k].path}`
+  //                 console.log(this.path)
+  //               }
+  //             }
+  //           })
+  //         }
+  //       }
+  //     })
+  //   }
+  // }
+}
+</script>
+<style lang="scss" scoped>
+  .container{
+    background: rgb(0, 145, 220);
+  }
+</style>

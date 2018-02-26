@@ -1,0 +1,84 @@
+<template>
+  <div id="app">
+    <router-view></router-view>
+  </div>
+</template>
+
+<script>
+import storage from 'good-storage'
+import { mapMutations, mapActions, mapGetters } from 'vuex'
+import { ERR_OK } from './common/config.js'
+export default {
+  name: 'app',
+  data () {
+    return {
+      initRoleManage: false,
+      arr: ['账号管理(平台)', '账号管理(机构)', '账号管理(政府)', '综合管理系统', '客服系统'],
+      roleMana: {
+        'pt': [],
+        'zf': [],
+        'org': [],
+        'service': []
+      }
+    }
+  },
+  created () {
+    if (!window._dataInfo) {
+      storage.get('_dataInfo') && (window._dataInfo = JSON.parse(storage.get('_dataInfo')))
+    }
+    this._getPost()
+  },
+  methods: {
+    _getPost () {
+      if (window._dataInfo) {
+        this.initProvince()
+        this.$http.get('http://mp.17link.cc/worker/postDict').then(res => {
+          this.SET_POST(res.data.data.list)
+        }).catch(e => {
+          this.$store.dispatch('LogOut').then(() => {
+            location.reload() // 为了重新实例化vue-router对象 避免bug
+          })
+        })
+      }
+    },
+    _getRoleManage () {
+      if (this.initRoleManage) {
+        return
+      }
+      this.$http.get('http://ums.17link.cc/func/funcList.do').then(res => {
+        let data = res.data
+        if (data.errCode === ERR_OK) {
+          this.initRoleManage = true
+          let arr = Object.keys(this.roleMana)
+          let len = arr.length
+          data.data.funcs.forEach(item => {
+            for (let i = 0; i < len; i++) {
+              if (item.pName === this.arr[i]) {
+                this.roleMana[arr[i]].push({
+                  name: item.name,
+                  url: item.value
+                })
+              }
+            }
+          })
+          this.SET_ROLELIST(this.roleMana)
+        }
+      })
+    },
+    ...mapActions([
+      'initProvince'
+    ]),
+    ...mapMutations([
+      'SET_POST', 'SET_ROLELIST'
+    ])
+  },
+  computed: {
+    ...mapGetters(['token'])
+  },
+  watch: {
+    $route (newVal) {
+      this._getRoleManage()
+    }
+  }
+}
+</script>

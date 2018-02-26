@@ -1,0 +1,431 @@
+<template>
+  <div class="map-container" v-loading.body="loading">
+    <el-form :inline="true" :model="formInline" class="demo-form-inline search-wrap">
+      <el-form-item label="机构选择">
+        <el-select v-model="formInline.organization" @change="selectChange">
+          <el-option
+          v-for='item in instList'
+          :key='item.id'
+          :value='item.id'
+          :label="item.name">
+          </el-option>
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <!-- echarts -->
+    <div id="service-map-wrap"></div>
+  </div>
+</template>
+
+<script>
+export default {
+  async created () {
+    try{
+      // this.loading = true
+      this.userInfo = window._dataInfo
+      // 获取机构列表
+      let loadInstList = await this._loadInstList()
+      // 获取服务人员
+      this._loadServicerData()
+    } catch (e) {
+      console.log(e)
+    }
+  },
+  data() {
+    return {
+      loading: false,
+      myChart: null,
+      formInline: {
+        organization: ""
+      },
+      userInfo: null,   // 用户信息
+      instList: []  // 机构列表   
+    };
+  },
+  mounted () {
+    // 初始化
+    this.myChart = echarts.init(document.getElementById("service-map-wrap"));
+    // 人员坐标
+    let data = [
+      { name: "海门", value: 1 },
+      { name: "鄂尔多斯", value: 1 },
+      { name: "招远", value: 1 },
+      { name: "舟山", value: 1 },
+      { name: "齐齐哈尔", value: 1 },
+      { name: "盐城", value: 1 },
+      { name: "赤峰", value: 1 },
+      { name: "青岛", value: 1 },
+      { name: "乳山", value: 1 },
+      { name: "金昌", value: 1 },
+      { name: "泉州", value: 1 },
+      { name: "莱西", value: 1 },
+      { name: "日照", value: 1 },
+      { name: "胶南", value: 1 },
+      { name: "南通", value: 1 },
+      { name: "拉萨", value: 1 },
+      { name: "云浮", value: 1 },
+      { name: "梅州", value: 1 },
+      { name: "文登", value: 1 },
+      { name: "上海", value: 1 }
+    ]
+    let geoCoordMap = {
+      海门: [121.15, 31.89],
+      鄂尔多斯: [109.781327, 39.608266],
+      招远: [120.38, 37.35],
+      舟山: [122.207216, 29.985295],
+      齐齐哈尔: [123.97, 47.33],
+      盐城: [120.13, 33.38],
+      赤峰: [118.87, 42.28],
+      青岛: [120.33, 36.07],
+      乳山: [121.52, 36.89],
+      金昌: [102.188043, 38.520089],
+      泉州: [118.58, 24.93],
+      莱西: [120.53, 36.86],
+      日照: [119.46, 35.42],
+      胶南: [119.97, 35.88],
+      南通: [121.05, 32.08],
+      拉萨: [91.11, 29.97],
+      云浮: [112.02, 22.93],
+      梅州: [116.1, 24.55],
+      文登: [122.05, 37.2],
+      上海: [121.48, 31.22]
+    }
+    let convertData = function(data) {
+      var res = [];
+      for (var i = 0; i < data.length; i++) {
+        var geoCoord = geoCoordMap[data[i].name];
+        if (geoCoord) {
+          res.push({
+            name: data[i].name,
+            value: geoCoord.concat(data[i].value)
+          });
+        }
+      }
+      return res;
+    }
+    // 机构坐标
+    let data1 = [
+      { name: "成都", value: 10 },
+      { name: "郑州", value: 20 },
+    ]
+    let geoCoordMap1 = {
+      成都: [104.080384,30.656567],
+      郑州: [113.667639,34.752727]
+    }
+    let convertData1 = function(data) {
+      var res = [];
+      for (var i = 0; i < data.length; i++) {
+        var geoCoord = geoCoordMap1[data[i].name]
+        if (geoCoord) {
+          res.push({
+            name: data[i].name,
+            value: geoCoord.concat(data[i].value)
+          })
+        }
+      }
+      return res
+    }
+    // 配置
+    let option = {
+        backgroundColor: "#404a59",
+        title: {
+          text: "服务人员分布",
+          left: "center",
+          textStyle: {
+            color: "#fff"
+          }
+        },
+        tooltip: {
+          trigger: "item",
+          formatter: function (obj) {
+            console.log(obj)
+            return `${obj.name} : ${obj.value[2]}`
+          }
+        },
+        bmap: {
+          center: [104.080384, 30.656567],
+          zoom: 6,
+          roam: true,
+          mapStyle: {
+            styleJson: [
+              {
+                featureType: "water",
+                elementType: "all",
+                stylers: {
+                  color: "#044161"
+                }
+              },
+              {
+                featureType: "land",
+                elementType: "all",
+                stylers: {
+                  color: "#004981"
+                }
+              },
+              {
+                featureType: "boundary",
+                elementType: "geometry",
+                stylers: {
+                  color: "#064f85"
+                }
+              },
+              {
+                featureType: "railway",
+                elementType: "all",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "highway",
+                elementType: "geometry",
+                stylers: {
+                  color: "#004981"
+                }
+              },
+              {
+                featureType: "highway",
+                elementType: "geometry.fill",
+                stylers: {
+                  color: "#005b96",
+                  lightness: 1
+                }
+              },
+              {
+                featureType: "highway",
+                elementType: "labels",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "arterial",
+                elementType: "geometry",
+                stylers: {
+                  color: "#004981"
+                }
+              },
+              {
+                featureType: "arterial",
+                elementType: "geometry.fill",
+                stylers: {
+                  color: "#00508b"
+                }
+              },
+              {
+                featureType: "poi",
+                elementType: "all",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "green",
+                elementType: "all",
+                stylers: {
+                  color: "#056197",
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "subway",
+                elementType: "all",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "manmade",
+                elementType: "all",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "local",
+                elementType: "all",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "arterial",
+                elementType: "labels",
+                stylers: {
+                  visibility: "off"
+                }
+              },
+              {
+                featureType: "boundary",
+                elementType: "geometry.fill",
+                stylers: {
+                  color: "#029fd4"
+                }
+              },
+              {
+                featureType: "building",
+                elementType: "all",
+                stylers: {
+                  color: "#1a5787"
+                }
+              },
+              {
+                featureType: "label",
+                elementType: "all",
+                stylers: {
+                  visibility: "off"
+                }
+              }
+            ]
+          }
+        },
+        series: [
+          {
+            name: "服务人员",
+            type: "scatter",
+            coordinateSystem: "bmap",
+            data: convertData(data),
+            symbolSize: function(val) {
+              return val[2]*10;
+            },
+            label: {
+              normal: {
+                formatter: "{b}",
+                position: "right",
+                show: false
+              },
+              emphasis: {
+                show: true
+              }
+            },
+            itemStyle: {
+              normal: {
+                color: "#ddb926"
+              }
+            }
+          },
+          {
+            name: "服务机构",
+            type: "effectScatter",
+            coordinateSystem: "bmap",
+            data: convertData1(data1),
+            symbolSize: function(val) {
+              return  val[2]
+            },
+            showEffectOn: "emphasis",
+            rippleEffect: {
+              brushType: "stroke"
+            },
+            hoverAnimation: true,
+            label: {
+              normal: {
+                formatter: "{b}",
+                position: "right",
+                show: true
+              }
+            },
+            itemStyle: {
+              normal: {
+                color: "#f4e925",
+                shadowBlur: 10,
+                shadowColor: "#333"
+              }
+            },
+            zlevel: 1
+          },
+          {
+            type: "custom",
+            coordinateSystem: "bmap",
+            itemStyle: {
+              normal: {
+                opacity: 0.5
+              }
+            },
+            animation: false,
+            silent: true,
+            data: [0],
+            z: -10
+          }
+        ]
+    };
+    this.myChart.setOption(option);
+  },
+  methods: {
+    selectChange (id) {
+      console.log(id)
+    },
+    async _loadInstList () {
+      const userType = this.userInfo.type  // userType  用户身份 0 超级管理员 1 机构 2 政府
+      let params
+      if (userType === 0) {
+        console.log('超级管理员')
+        params = {
+          cityId: '',
+          provinceId: '',
+          streetId: '',
+          pageNum: 1
+        }
+        let res = await this.$http.post('/apis/orgStreet/getOrgByParam.do',params)
+        .then(res => {
+          this.instList = res.data.data.list
+          console.log(111)
+        }).catch(err => {
+          console.log(err)
+        })
+      } else if (userType === 1) {
+        console.log('机构')
+        this.instList.push({
+          id: this.userInfo.orgId,
+          name: this.userInfo.orgName
+        })
+      } else if (userType === 2) {
+        console.log('政府')
+        params = {
+          cityId: this.userInfo.cityId,
+          areaId: this.userInfo.countryId,
+          provinceId: this.userInfo.provinceId,
+          streetId: this.userInfo.streetId,
+          pageNum: 1
+        }
+        let res = await this.$http.post('/apis/orgStreet/getOrgByParam.do',params)
+        .then(res => {
+          this.instList = res.data.data.list
+        }).catch(err => {
+          console.log(err)
+        })
+      }
+      
+    },
+    async _loadServicerData () {
+      const userType = this.userInfo.type
+      let params = {
+        ids: []
+      }
+      if (userType === 0) {
+        console.log('超级管理员')
+        let res = await this.$http.post('/jay/worker/position',params)
+        .then(res => {
+          console.log(res.data)
+        }).catch(err => {
+          cosnole.log(err)
+        })
+      } else if (userType === 1) {
+        console.log('机构')
+      } else if (userType === 2) {
+        console.log('政府')
+      }
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.map-container {
+  padding: 20px;
+}
+#service-map-wrap {
+  width: 100%;
+  height: 750px;
+  position: relative;
+}
+</style>
