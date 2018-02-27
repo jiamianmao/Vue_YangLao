@@ -15,6 +15,7 @@ export function removeToken() {
   cookies.remove('CSESSIONID')
   cookies.remove('CSESSIONNAME')
   cookies.remove('JSESSIONID')
+  // 置空或delete
   window._dataInfo = null
   storage.clear()
 }

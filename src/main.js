@@ -21,8 +21,8 @@ const _import = require('./router/_import_' + process.env.NODE_ENV)
 
 Vue.use(ElementUI)
 
-axios.defaults.timeout = 20000
-// 颇为奇怪 不带cookie就想溜
+axios.defaults.timeout = 5000
+// axios默认是不携带cookie的
 axios.defaults.withCredentials = true
 
 Vue.prototype.$http = axios
