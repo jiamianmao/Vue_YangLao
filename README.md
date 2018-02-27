@@ -8,6 +8,7 @@
  - [手摸手，带你封装一个vue component](https://segmentfault.com/a/1190000009090836)
 
 ## 目录结构
+```
 │  App.vue
 │  CommonRules.js    // 通用规则
 │  main.js
@@ -233,6 +234,7 @@
     │
     └─tree
             index.vue
+```
 
 ## 说明
 项目的前后端都至少经历三个人来维护，所以很多命名风格和代码风格不同，所以请认真阅读以下内容，避免踩坑
