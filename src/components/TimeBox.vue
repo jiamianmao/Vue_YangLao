@@ -30,7 +30,6 @@
                 baseNum: 17,
                 flag: true
             }
-
         },
         created(){
             if(this.costTime){

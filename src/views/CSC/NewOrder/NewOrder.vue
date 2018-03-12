@@ -245,6 +245,8 @@
                 }
             },
             submit(){
+                console.log('orderForm')
+                console.log(this.orderForm)
                 if(!this.orderForm.serviceTime){
                     alert('请选择服务日期');
                     return false;
@@ -427,9 +429,12 @@
                     Array.prototype.push.apply(this.usedTime,data);
                 }).catch(e => console.log);
             },
-            chooseSerTime(startTime,endTime,showTime){
+            chooseSerTime(startTime, endTime, showTime){
+                console.log('触发chooseSerTime')
+                console.log(startTime)
                 this.orderForm.serviceTime = startTime;
                 this.showTime = showTime;
+                console.log(this.orderForm.serviceTime)
             },
             newAddress(){
                 this.showDialog = true;

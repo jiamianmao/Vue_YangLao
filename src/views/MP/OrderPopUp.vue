@@ -18,7 +18,7 @@
                     <el-form-item label="服务满意度" :label-width="formLabelWidth" prop="scope">
                         <el-rate v-model="visitform.scope"></el-rate>
                     </el-form-item>
-                    <el-form-item label="回访记录" :label-width="formLabelWidth" prop="desc">
+                    <el-form-item label="回访记录" style='display: none;' :label-width="formLabelWidth" prop="desc">
                         <el-input type="textarea" v-model="visitform.desc"></el-input>
                     </el-form-item>
                 </el-form>

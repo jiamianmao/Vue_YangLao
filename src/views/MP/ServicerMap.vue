@@ -17,10 +17,16 @@
     <!-- tip -->
     <div class="tip-text">
       红色代表：签到忙碌，绿色代表：签退空闲
+      <div class="tab__btn">
+        <button :class='{"active": active}' @click='toggleMap(1)'>统计地图</button>
+        <button :class='{"active": !active}' @click='toggleMap(2)'>详情地图</button>
+      </div>
     </div>
+    
     <div class="service-map-wrapper">
-      <div id="service-map-wrap"></div>
-      <map-slide :title='mapNumTitle' :num='mapTotalNum' v-show="this.mapList"></map-slide>
+      <div id="service-map-wrap" v-show='active'></div>
+      <div id="box" v-show='!active' v-loading.body="loading"></div>
+      <map-slide :title='mapNumTitle' :num='mapTotalNum' v-show="active && this.mapList.length"></map-slide>
       <!-- <map-title :title='mapTitle' v-show="this.geoCoordMap"></map-title> -->
     </div>
     
@@ -60,21 +66,19 @@ export default {
       instList: [],  // 机构列表   
       serviceData: [],   // 散点地图数据 
       geoCoordMap: null,  // 散点地图坐标数据
-      mapList: []
+      mapList: [],
+      active: true
     };
   },
   methods: {
     // 选择对应的机构
     selectChange (id) {
-      console.log(id)
       const userType = window._dataInfo.type  // userType  用户身份 0 超级管理员 1 机构 2 政府
-      console.log(userType)
       let params
       if (userType === 0 || userType === 1) {
         params = {
           ids: [id]
         }
-        console.log(params)
       }
       if (userType === 2) {
         let ids = []
@@ -89,10 +93,7 @@ export default {
       .then(res => {
         this.mapList = res.data.data
         this.mapTotalNum = res.data.count
-        // this.serviceData = res.data.data
-        // this.geoCoordMap = res.data.geoCoordMap
-        // this._drawEcharts()
-        this._drawMap()
+        this.active ? this._drawMap() : this.drowOriginMap()
       }).catch(err => {
         console.log(err)
       })
@@ -164,7 +165,6 @@ export default {
       }
       let res = await this.$http.post(`${MP}/worker/position`,params)
       .then(res => {
-        console.log(res.data)
         this.mapList = res.data.data
         this.mapTotalNum = res.data.count
         // this.serviceData = res.data.data
@@ -173,6 +173,10 @@ export default {
         console.log(err)
       })
       cb && cb()
+    },
+    toggleMap (n) {
+      this.active = n === 1 ? true : false
+      this.active ? this._drawMap() : this.drowOriginMap()
     },
     // 绘制地图 echarts方案
     _drawEcharts () {
@@ -771,8 +775,6 @@ export default {
       // let mapData = this._formatMapData(this.geoCoordMap)
       // mapData.push(position)
       // this.mapTotalNum = mapData.length  // 总数量
-      console.log(this.mapList)
-      
       let markers = this.mapList // marker点集合
       const color1 = require('./green.png')
       const color2 = require('./red.png')
@@ -797,6 +799,35 @@ export default {
       })
       
       this.loading = false
+    },
+    drowOriginMap () {
+      let markers = this.mapList
+      let map = new AMap.Map('box', {
+          resizeEnable: true,
+          zoom: 5,
+          center: [104.087392,30.557836]
+      })
+      let dict = {
+        '1': '空闲',
+        '2': '忙碌'
+      }
+      markers.forEach(item => {
+        let marker = new AMap.Marker({
+          position: item.position.split(','),
+          title: item.title + ": " + dict[item.userNum],
+          map
+        })
+        marker.setMap(map)
+      })
+
+      map.plugin(["AMap.ToolBar"], function() {
+          map.addControl(new AMap.ToolBar());
+      })
+
+      let _this = this
+      map.on('complete', function() {
+          _this.loading = false
+      });
     },
     _formatMapData (list) {
       let ret = []
@@ -823,7 +854,7 @@ export default {
   height: 800px;
   position: relative;
 }
-#service-map-wrap {
+#service-map-wrap, #box {
   width: 100%;
   height: 100%;
   position: relative;
@@ -832,6 +863,27 @@ export default {
   display: none;
 }
 .tip-text{
-  line-height: 30px;
+  height: 50px;
+  line-height: 50px;
+  display: flex;
+  flex-flow: row nowrap;
+}
+.tab__btn{
+  margin-left: 20px;
+  button {
+      width: 100px;
+      height: 36px;
+      border-radius: 5px;
+      border: 1px solid #333;
+      background: #fff;
+      color: #333;
+      cursor: pointer;
+      &~button {
+          margin-left: 10px;
+      }
+      &.active {
+          color: red;
+      }
+  }
 }
 </style>

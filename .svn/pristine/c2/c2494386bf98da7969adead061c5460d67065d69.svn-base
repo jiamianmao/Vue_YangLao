@@ -1,5 +1,0 @@
-//sidebar
-$menuBg:#00A6FC;
-$activeBg: rgba(255, 255, 255, .4);
-$subMenuBg:#1f2d3d;
-$menuHover:#001528;

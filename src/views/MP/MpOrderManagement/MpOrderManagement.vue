@@ -194,7 +194,7 @@
                         eventName: "link-to"
                     },{
                         name: "订单状态",
-                        value: "showState",
+                        value: "state",
                         ifControl: false,
                         eventName: ""
                     },{

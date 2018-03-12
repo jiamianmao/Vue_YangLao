@@ -88,6 +88,7 @@ export default {
           if (res.data.errCode === ERR_OK) {
             this.loading = true
             window._dataInfo = res.data.user
+            storage.set('role', res.data.roleIds)
             let info = JSON.stringify(res.data.user)
             storage.set('_dataInfo', info)
             this.$store.dispatch('Login', res.data.user).then(() => {

@@ -155,7 +155,7 @@
                     </div>
                 </div>
             </el-row>
-            <el-row v-if="state === 5">
+            <el-row v-if="state === 5" style='display: none;'>
                 <div class="left visited-info">
                     <h5>回访记录</h5>
                     <div class='content'>

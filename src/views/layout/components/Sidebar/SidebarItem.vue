@@ -38,33 +38,32 @@ export default {
   },
   created () {
     this.id = window._dataInfo.id
-    this.dict = {
-      '1': 1,
-      '200': 3,
-      '198': 4
-    }
-    // this._getId()
-    this._getMenu()
+    this.roles = Storage.get('role')
+    this._getMenuData()
   },
   methods: {
-    // _getId () {
-    //   this.$http.get(`${UMS}/role/doSearch.do?name=&status=&type=`).then(res => {
-    //     let data = res.data
-    //     if (data.errCode === 0) {
-    //       data.data.role.filter(item => {
-    //         return item.name === 
-    //       })
-    //     }
-    //   })
-    // },
-    _getMenu () {
-      this.$http.get(`${UMS}/role/getRoleByRoleId.do?id=${this.dict[this.id]}`).then(res => {
-        let data = res.data
-        if (data.errCode === 0) {
-          let func = data.data.funcs
-          this._handlerMenu(func)
-          Storage.set('menus', JSON.stringify(func))
+    _getMenuData () {
+      let ajaxArr = []
+      for (let i = 0; i < this.roles.length; i++) {
+        ajaxArr.push(this.$http.get(`${UMS}/role/getRoleByRoleId.do?id=${this.roles[i]}`))
+      }
+      this.$http.all(ajaxArr).then(res => {
+        let result
+        for (let i = 0; i < res.length; i++) {
+          let values = res[i].data.data.funcs
+          if (i > 1) {
+            for (let v = 0; v < values.length; v++) {
+              result.forEach(item => {
+                if (item.id !== values[v].id) {
+                  result.push(values[v].id)
+                }
+              })
+            }
+          } else {
+            result = values
+          }
         }
+        this._handlerMenu(result)
       })
     },
     _handlerMenu (data) {

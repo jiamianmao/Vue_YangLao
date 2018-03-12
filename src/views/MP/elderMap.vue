@@ -17,12 +17,18 @@
                         :label="index">{{item}}</el-radio>
                     </el-radio-group>
                 </el-form-item>
+                <el-form-item class='tab__btn'>
+                    <button :class='{"active": active}' @click='toggleMap(1)'>统计地图</button>
+                    <button :class='{"active": !active}' @click='toggleMap(2)'>详情地图</button>
+                </el-form-item>
             </el-row>
         </el-form>
+        
         <el-row>
           <div class="map-wrapper" style="position:relative;">
-            <div id="container" v-loading.body="loading"></div>
-            <map-slide :title='mapNumTitle' :num='mapTotalNum' v-show="this.list.length"></map-slide>
+            <div id="container" v-show='active' v-loading.body="loading"></div>
+            <div id="box" v-show='!active' v-loading.body="loading"></div>
+            <map-slide :title='mapNumTitle' :num='mapTotalNum' v-show="active && this.list.length"></map-slide>
             <!-- <map-title :title='mapTitle' v-show="this.list.length"></map-title> -->
           </div>
         </el-row>
@@ -56,7 +62,8 @@
               center: "",
               list: [],
               loading: false,
-              userInfo: null
+              userInfo: null,
+              active: true
             };
         },
         created () {
@@ -84,14 +91,12 @@
                     };
                     let res = await this.$http.post(`${MP}/user/position`, data)
                     let { center, list, userCount } = res.data.data
-                    this.center = center.split(",");
-                    // list.forEach(v=>v.position = v.position.split(","));
+                    this.center = center.split(",")
                     this.list = list
                     this.mapTotalNum = userCount
-                    this.drowMap()    // 高德地图
-                    // this.drowEcharts()  // 加载echarts
+                    this.active ? this.drowMap() : this.drowOriginMap()
                 } catch (e) {
-                    console.log(e);
+                    console.log(e)
                 }
             },
             drowMap() {
@@ -103,7 +108,6 @@
                 zoom: 6,
                 center: this.center
               });
-              //just some colors 
               // 闪烁点
               var colors = [
                   '#252466'
@@ -471,260 +475,51 @@
               })
               this.loading = false
             },
-            drowEcharts () {
-              this.loading = false
-              // 初始化
-              this.myChart = echarts.init(document.getElementById("container"));
-              // console.log(this.list, this.center)
-              let data = []
-              let geoCoordMap = {}
-              this.list.forEach((item) => {
-                data.push({
-                  name: item.title,
-                  value: 1
+            drowOriginMap () {
+                let map = new AMap.Map('box', {
+                    resizeEnable: true,
+                    zoom: 11
                 })
-              })
-              this.list.forEach((item, index) => {
-                geoCoordMap[item.title] = item.position
-              })
-              // console.log(data, geoCoordMap)
-              let convertData = function(data) {
-                var res = [];
-                for (var i = 0; i < data.length; i++) {
-                  var geoCoord = geoCoordMap[data[i].name];
-                  if (geoCoord) {
-                    res.push({
-                      name: data[i].name,
-                      value: geoCoord.concat(data[i].value)
-                    });
-                  }
+                
+                // 设置中心点
+                let city
+                if (this.formData.city) {
+                    city = this.formData.city
+                } else if (this.formData.province) {
+                    city = this.formData.province
+                } else {
+                    city = '成都市'
                 }
-                return res;
-              }
-              let cityData = [{
-                name: '成都',
-                value: [104.08139,30.658059,10]
-              }]
-              // echarts配置
-              let option = {
-                backgroundColor: "#404a59",
-                title: {
-                  text: "机构分布",
-                  left: "center",
-                  textStyle: {
-                    color: "#fff"
-                  }
-                },
-                tooltip: {
-                  trigger: "item",
-                  formatter: function(obj) {
-                    // console.log(obj)
-                    return `${obj.name}`;
-                  }
-                },
-                bmap: {
-                  center: this.center,  // 地图中心点设置
-                  zoom: 11,   // 地图缩放比例
-                  roam: true,
-                  mapStyle: {
-                    styleJson: [
-                      {
-                        featureType: "water",
-                        elementType: "all",
-                        stylers: {
-                          color: "#044161"
-                        }
-                      },
-                      {
-                        featureType: "land",
-                        elementType: "all",
-                        stylers: {
-                          color: "#004981"
-                        }
-                      },
-                      {
-                        featureType: "boundary",
-                        elementType: "geometry",
-                        stylers: {
-                          color: "#064f85"
-                        }
-                      },
-                      {
-                        featureType: "railway",
-                        elementType: "all",
-                        stylers: {
-                          visibility: "off"
-                        }
-                      },
-                      {
-                        featureType: "highway",
-                        elementType: "geometry",
-                        stylers: {
-                          color: "#004981"
-                        }
-                      },
-                      {
-                        featureType: "highway",
-                        elementType: "geometry.fill",
-                        stylers: {
-                          color: "#005b96",
-                          lightness: 1
-                        }
-                      },
-                      {
-                        featureType: "highway",
-                        elementType: "labels",
-                        stylers: {
-                          visibility: "off"
-                        }
-                      },
-                      {
-                        featureType: "arterial",
-                        elementType: "geometry",
-                        stylers: {
-                          color: "#004981"
-                        }
-                      },
-                      {
-                        featureType: "arterial",
-                        elementType: "geometry.fill",
-                        stylers: {
-                          color: "#00508b"
-                        }
-                      },
-                      {
-                        featureType: "poi",
-                        elementType: "all",
-                        stylers: {
-                          visibility: "off"
-                        }
-                      },
-                      {
-                        featureType: "green",
-                        elementType: "all",
-                        stylers: {
-                          color: "#056197",
-                          visibility: "off"
-                        }
-                      },
-                      {
-                        featureType: "subway",
-                        elementType: "all",
-                        stylers: {
-                          visibility: "off"
-                        }
-                      },
-                      {
-                        featureType: "manmade",
-                        elementType: "all",
-                        stylers: {
-                          visibility: "off"
-                        }
-                      },
-                      {
-                        featureType: "local",
-                        elementType: "all",
-                        stylers: {
-                          visibility: "off"
-                        }
-                      },
-                      {
-                        featureType: "arterial",
-                        elementType: "labels",
-                        stylers: {
-                          visibility: "off"
-                        }
-                      },
-                      {
-                        featureType: "boundary",
-                        elementType: "geometry.fill",
-                        stylers: {
-                          color: "#029fd4"
-                        }
-                      },
-                      {
-                        featureType: "building",
-                        elementType: "all",
-                        stylers: {
-                          color: "#1a5787"
-                        }
-                      },
-                      {
-                        featureType: "label",
-                        elementType: "all",
-                        stylers: {
-                          visibility: "off"
-                        }
-                      }
-                    ]
-                  }
-                },
-                series: [
-                  {
-                    name: "机构",
-                    type: "scatter",
-                    coordinateSystem: "bmap",
-                    data: convertData(data),
-                    symbolSize: function(val) {
-                      return val[2] * 10;
-                    },
-                    label: {
-                      normal: {
-                        formatter: "{b}",
-                        position: "right",
-                        show: false
-                      },
-                      emphasis: {
-                        show: false
-                      }
-                    },
-                    itemStyle: {
-                      normal: {
-                        color: "#ddb926"
-                      }
-                    }
-                  },
-                  {
-                    name: '',
-                    type: 'effectScatter',
-                    coordinateSystem: 'bmap',
-                    data: cityData,
-                    symbolSize: function (val) {
-                        return 20
-                    },
-                    showEffectOn: 'emphasis',
-                    rippleEffect: {
-                        brushType: 'stroke'
-                    },
-                    hoverAnimation: true,
-                    label: {
-                        normal: {
-                            formatter: '{b}',
-                            position: 'right',
-                            show: true
-                        }
-                    },
-                    itemStyle: {
-                        normal: {
-                            color: '#f4e925',
-                            shadowBlur: 10,
-                            shadowColor: '#333'
-                        }
-                    },
-                    zlevel: 1
-                  },
-                ]
-              };
-              this.myChart.setOption(option);
+                map.setCity(city)
+
+                for(let i = 0; i < this.list.length; i++){
+                    let marker = new AMap.Marker({
+                        position: this.list[i].position.split(','),
+                        title: this.list[i].title + ": " +this.list[i].userNum,
+                        map
+                    })
+                    marker.setMap(map)
+                }
+
+                map.plugin(["AMap.ToolBar"], function() {
+                    map.addControl(new AMap.ToolBar());
+                })
+
+                let _this = this
+                map.on('complete', function() {
+                    _this.loading = false
+                });
             },
             selectChange(argus){
                 this.formData.province = argus.provinceName;
                 this.formData.city = argus.cityName;
                 this.formData.zone = argus.areaName;
                 this.formData.street = argus.streetName;
-                //
                 this.getMapData();
-
+            },
+            toggleMap (n) {
+                this.active = n === 1 ? true : false
+                this.active ? this.drowMap() : this.drowOriginMap()
             },
             _formatMapData (list) {
               let ret = []
@@ -741,8 +536,7 @@
         },
         components: {
           mapArea,
-          mapSlide,
-          // mapTitle
+          mapSlide
         }
     }
 </script>
@@ -750,10 +544,28 @@
   .map-wrapper{
     height: 700px;
     position: relative;
-    #container{
+    #container, #box{
       height: 700px;
       margin: 0 auto;
     }
   }
+  .tab__btn{
+    margin-left: 20px;
+    button {
+        width: 100px;
+        height: 36px;
+        border-radius: 5px;
+        border: 1px solid #333;
+        background: #fff;
+        color: #333;
+        cursor: pointer;
+        &~button {
+            margin-left: 10px;
+        }
+        &.active {
+            color: red;
+        }
+    }
+}
     
 </style>

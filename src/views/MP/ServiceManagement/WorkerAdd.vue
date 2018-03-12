@@ -104,12 +104,6 @@
                                 <el-form-item label="手机号" prop="mobile">
                                     <el-input v-model="vmData.mobile" :disabled="!isEdit"></el-input>
                                 </el-form-item>
-                                <el-form-item label="总金额" prop="money">
-                                    {{ tWorkerPositionVo.variableAmount || 0 }}元
-                                </el-form-item>
-                                <el-form-item label="">
-                                    <el-button type='primary' @click='total' v-if='!isGover' :disabled='!tWorkerPositionVo.variableAmount'>结算</el-button>
-                                </el-form-item>
                             </el-col>
                         </el-row>
                         <el-row>
@@ -209,6 +203,43 @@
                                     </el-col>
                                 </el-row>
                             </el-form-item>
+                        </el-row>
+                        <el-row>
+                            <el-form-item label="账户余额" prop="money">
+                                {{ tWorkerPositionVo.variableAmount || 0 }}元
+                                <el-button style='margin-left: 20px;' type='primary' @click='total' v-if='!isGover' :disabled='!tWorkerPositionVo.variableAmount'>结算</el-button>
+                            </el-form-item>
+                            <div class="list">
+                                <el-table :data="tableData" stripe border class="list"
+                                        v-loading="pending"
+                                        element-loading-text="正在请求数据...">
+                                    <el-table-column 
+                                        prop="operatingTime" 
+                                        label="时间"
+                                        align="center"
+                                        >
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="operatingName"
+                                            label="操作账户名称"
+                                            align="center">
+                                    </el-table-column>
+                                    <el-table-column
+                                            prop="settlementAmount"
+                                            label="结算金额"
+                                            align="center"
+                                            >
+                                    </el-table-column>
+                                </el-table>
+                                <!--分页-->
+                                <el-row type="flex" justify="center">
+                                    <el-pagination @current-change="pageChange"
+                                                :page-size="10"
+                                                layout="total, prev, pager, next"
+                                                :total="totleNum">
+                                    </el-pagination>
+                                </el-row>
+                            </div>
                         </el-row>
                     </el-row>
                     <form-chunk-label title="相关证件"></form-chunk-label>
@@ -357,13 +388,13 @@
 </template>
 
 <script>
-  import { mapState, mapGetters } from 'vuex';
+  import { mapState, mapGetters, mapMutations } from 'vuex';
   import { cscService, umsService } from '../../../service.js';
   import FormChunkLabel from '@/components/FormChunkLabel.vue';
   import { format } from 'date-fns';
-  import cloneDeep from 'lodash.clonedeep';
-  import { MP } from '@/common/config'
-  import { required, isMobile } from '../../../CommonRules';
+  import cloneDeep from 'lodash.clonedeep'
+  import { required, isMobile } from '../../../CommonRules'
+  import { UMS, MP } from '@/common/config'
 
   export default {
     data() {
@@ -533,10 +564,20 @@
         },
         mapFlag: false,
         userInfo: window._dataInfo,
-        tWorkerPositionVo: {}
+        tWorkerPositionVo: {},
+        tableData: [],
+        pending: false,
+        totleNum: 0
       }
     },
     async created() {
+      if (!this.provinces.length) {
+          this.$http.get(`${UMS}/city/getAllProvince.do`).then(res => {
+              if (res.data.errCode === 0) {
+                  this.SET_Provinces(res.data.data.list)
+              }
+          })
+      }
       const workerId = Number(this.$route.params.id);
 
       const { list: cates } = await cscService.getServiceCates();
@@ -557,6 +598,9 @@
       if (!this.isAdd) {
         this._getInit()
       }
+
+      this.currentPage = 1
+      this._getList()
     },
     beforeRouteLeave({ name: toName, query: { isFresh } }, { name: fromName }, next) {
       if (toName === 'WorkerDetail' && fromName === 'WorkerAdd' && !isFresh) {
@@ -566,9 +610,25 @@
       if (toName === 'WorkerAdd' && fromName === 'WorkerDetail') {
         this.sourceVM = cloneDeep(this.vmData);
       }
-      next();
+      next()
     },
     methods: {
+      _getList () {
+        this.pending = true
+          // 分页结算日志
+        this.$http.get(`${MP}/settlement/queryAll?workerId=${this.trainForm.workerId}&currentPage=${this.currentPage}`).then(res => {
+            this.pending = false
+            let data = res.data
+            if (!data.errCode) {
+                this.totleNum = data.data.totalPageNum
+                this.currentPage = data.data.currentPage
+                this.tableData = data.data.settlementInfoList.filter(item => {
+                    item.operatingTime = format(item.operatingTime, 'YYYY年MM月DD日 HH:mm')
+                    return item.operatingType === 2
+                })
+            }
+        })
+      },
       /**
        * 增加一位紧急联系人信息
        */
@@ -775,7 +835,12 @@
         })
         marker.setTitle(name)
         marker.setMap(map)
-      }
+      },
+      pageChange(page) {
+        this.currentPage = page
+        this._getList()
+      },
+      ...mapMutations(['SET_Provinces'])
     },
     computed: {
       submitData() {
