@@ -437,6 +437,7 @@ export default {
       for(let i = 0; i < this.list.length; i++){
           let marker = new AMap.Marker({
               position: this.list[i].position,
+              title: this.list[i].title,
               map
           })
           marker.setMap(map)

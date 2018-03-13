@@ -38,25 +38,29 @@
         },
         methods: {
             chose(n){
-                this.clickNum = n ;
+                this.clickNum = n;
             },
             sendMessage(){
                 let sum = this.needNum + this.clickNum;
                 let startTime = this.showTime[this.clickNum];
                 let endTime = this.showTime[sum];
-                if(sum  === 24) endTime = '20:00';
+                if(sum === 24) {
+                    endTime = '20:00';
+                }
                 let showTime = startTime + "至" + endTime;
                 let date = new Date(this.curTime);
                 let sTime = date.getFullYear() + '-' + (date.getMonth()+1)
                     + '-' + date.getDate() + ' ' + startTime;
                 let eTime = date.getFullYear() + '-' + (date.getMonth()+1)
                     + '-' + date.getDate() + ' ' + endTime;
-                if(!startTime) showTime = '';
-                this.$emit('choose-time',new Date(sTime).getTime() , new Date(eTime).getTime(),showTime);
+                if(!startTime) {
+                    showTime = '';
+                }
+                this.$emit('choose-time',new Date(sTime.replace(/-/g, "/")).getTime(), new Date(eTime).getTime(), showTime);
             }
         },
         watch: {
-            'costTime' : function(){
+            'costTime': function(){
                 if(this.costTime){
                     this.needNum = Math.ceil(this.costTime/30);
                 }
@@ -64,10 +68,9 @@
                 if(this.costTime === 0){
                     this.needNum = 0;
                     this.clickNum = '';
-                    console.log(this.needNum);
                 }
             },
-            'useTime' : function(){
+            'useTime': function(){
                 this.disabledTime = this.useTime;
             }
         },
@@ -84,7 +87,6 @@
                     if(needNum === '' || needNum === undefined || chooseNum === undefined || chooseNum === null){
                         return false;
                     }
-                    //
                     for(let i = 0 ; i < 24; i++){
                         children[i].className = children[i].className.replace("choose","");;
                     }
@@ -106,7 +108,6 @@
                         }
                         children[i].className += 'choose';
                     }
-//                    children[1].value = !children[1].value;
                     vnode.context.sendMessage();
                 }
             }

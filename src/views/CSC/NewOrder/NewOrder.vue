@@ -234,10 +234,10 @@
                     orderForm.workerPost = workerInfo.post;
                     orderForm.workerMobile = workerInfo.mobile;
                     //获取服务时间
+                    console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~')
 
                     orderForm.duration = this.totleTime;
                     orderForm.productList = this.categoryList;
-                    console.log(this.categoryList);
                     return true;
                 }catch(e){
                     alert('请将表单数据填写完整');
@@ -252,8 +252,6 @@
                     return false;
                 }
                 if( this.totlePrice > this.balance){
-                    console.log(this.totlePrice);
-                    console.log(this.balance);
                     alert('余额不足，无法提交订单！');
                     return false;
                 }
@@ -328,19 +326,22 @@
                     price: '',
                     serviceDuration: ''
                 }
-                if(obj.productList.length > 0){
-                    for(let k in temp){
-                        temp[k] = obj.productList[0][k];
+                let x = []
+                obj.productList.forEach(item => {
+                    let newObj = {}
+                    for (let k in temp) {
+                        newObj[k] = item[k]
                     }
-                    this.categoryList[n] = temp;
-
-                }
+                    x.push(newObj)
+                })
+                this.categoryList = x
                 this.groupTime[n] = obj.time;
                 this.groupPrice[n] = obj.price;
                 this.totleTime = this.groupTime.reduce((a, b)=>a + b, 0);
                 this.totlePrice = this.groupPrice.reduce((a, b)=>a + b, 0);
             },
             groupSelect(cateP,num){
+                console.log('groupSelect')
                 //是否可以增加group true为可以
                 this.ifAddGroup = true;
                 //为上一次选中的catePid
@@ -397,7 +398,7 @@
                     let _this = this;
                     let res = await this.$http.get(`${MP}/worker/getworkerByOrg?orgId=` + this.orderForm.orgId);
                     this.serPeople = res.data.data.list;
-                    this.serPeople.forEach(v=>v._userShowInfo = v.name + " " + _this.workerPostDict.get(v.post));
+                    this.serPeople.forEach(v => v._userShowInfo = v.name + " " + _this.workerPostDict.get(v.post));
                 }catch(e){
                     alert(e);
                 }
@@ -407,11 +408,10 @@
                     let _this = this;
                     this.workerPostDict = new Map();
                     let res = await this.$http.get(`${MP}/worker/postDict`);
-                    res.data.data.list.forEach(v=>_this.workerPostDict.set(v.id,v.text));
+                    res.data.data.list.forEach(v => _this.workerPostDict.set(v.id,v.text));
                 }catch(e){
                     alert(e);
                 }
-
             },
             getDateList(id){
                 this.$http.get(`${MP}/worker/futureTwoWeekDate?workerId=`+id
