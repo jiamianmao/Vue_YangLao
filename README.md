@@ -9,17 +9,17 @@
 
 ## 目录结构
 ```
-│  App.vue
-│  CommonRules.js    // 通用规则
-│  main.js
+│  App.vue           // 根路由
+│  CommonRules.js    // 通用规则 用于表单验证
+│  main.js           // 入口文件 全局控制和import
 │  permission.js    // 权限控制
 │  service.js       // 抽离出来的一些接口，方便进行这部分接口的统一配置
 │
-├─api
+├─api             // 抽离的login.js 应用在首页中
 │      login.js
 │      table.js
 │
-├─assets
+├─assets             // 静态图片资源
 │  ├─404_images
 │  │      404.png
 │  │      404_cloud.png
@@ -44,7 +44,7 @@
 │
 ├─common
 │      config.js      // 因为是接口在两个域名下，所以使用config文件形式配置baseURL，切换mode时，只需切换product的boolean值
-│      iconfont.js
+│      iconfont.js    // SVG图标
 │
 ├─components       // 通用的基础组件
 │  │  checkGroup.vue
@@ -120,17 +120,17 @@
     │  AccountInfo.vue
     │  GovernmentInfo.vue
     │
-    ├─CSC         // 原MP系统下的所有
-    │  │  OrderManagement.vue
-    │  │  OrderReassignment.vue
+    ├─CSC         // 客服系统  --------------------------------------- 一级目录
+    │  │  OrderManagement.vue       // 订单管理
+    │  │  OrderReassignment.vue     // 订单分配
     │  │
-    │  └─NewOrder
+    │  └─NewOrder                   // 新订单
     │          NewOrder.vue
     │          popUp.vue
     │
-    ├─government
+    ├─government                    // 账号管理(政府) ----------------- 一级目录
     │      GovernmentAddSubAccount.vue
-    │      GovernmentSubManaget.vue
+    │      GovernmentSubManaget.vue     // 账号管理
     │      governSubArea.vue
     │
     ├─home       // 登录成功后的路由
@@ -148,70 +148,70 @@
     │              index.vue
     │              SidebarItem.vue
     │
-    ├─login
+    ├─login      // 登录页
     │      index.vue
     │
-    ├─MP       // 原MP系统下的所有
-    │  │  Category.vue
-    │  │  elderMap.vue
+    ├─MP       // 综合管理系统  --------------------------------------- 一级目录
+    │  │  Category.vue           // 品类管理
+    │  │  elderMap.vue           // 老人关爱地图
     │  │  green.png
     │  │  MapSlide.vue
     │  │  MapTitle.vue
-    │  │  OrderDetail.vue
+    │  │  OrderDetail.vue        // 订单详情
     │  │  OrderPopUp.vue
-    │  │  organizationMap.vue
+    │  │  organizationMap.vue    // 机构地图
     │  │  red.png
-    │  │  ServicerMap.vue
+    │  │  ServicerMap.vue        // 服务人员地图
     │  │
-    │  ├─CommoditiesManagement
+    │  ├─CommoditiesManagement   // 商品管理
     │  │      CommoditiesManagement.vue
     │  │      CommodityInfo.vue
     │  │      editPro.vue
     │  │
-    │  ├─ElderlyManagement
+    │  ├─ElderlyManagement       // 老人管理
     │  │      bankrollContral.vue
     │  │      elderlyArea.vue
     │  │      ElderlyManagement.vue
     │  │      emergencyContact.vue
     │  │      operateElderly.vue
     │  │
-    │  ├─MpOrderManagement
+    │  ├─MpOrderManagement       // 订单管理
     │  │      MpOrderManagement.vue
     │  │
-    │  └─ServiceManagement
+    │  └─ServiceManagement       // 服务人员管理
     │          green.png
     │          red.png
     │          ServiceManagement.vue
-    │          WorkerAdd.vue
-    │          WorkerList.vue
+    │          WorkerAdd.vue    // 服务人员添加
+    │          WorkerList.vue   // 服务人员列表
     │
-    ├─organ
+    ├─organ         // 账号管理(机构) ------------------------------------ 一级目录
     │      AddChildAccount.vue
-    │      OrganAccountM.vue
+    │      OrganAccountM.vue       // 账号管理
     │
-    ├─platform      // 平台相关
-    │  ├─functionManager
+    ├─platform      // 账号管理(平台) ------------------------------------ 一级目录
+    │  ├─functionManager        // 权限管理
     │  │  │  functionManager.vue
     │  │  │
     │  │  └─poPup
     │  │          poPup.vue
     │  │
-    │  ├─GovernmentManagement
+    │  ├─GovernmentManagement     // 政府账号管理
     │  │      AddGovernment.vue
     │  │      editGovernmentInfo.vue
     │  │      GovernmentManagement.vue
     │  │
-    │  ├─OrgAccountManagement
+    │  ├─OrgAccountManagement   // 机构账号管理
     │  │      AddOrgAccount.vue
     │  │      editOrgInfo.vue
     │  │      OrgAccountManagement.vue
     │  │
-    │  ├─OrgManagement
+    │  ├─OrgManagement        // 机构管理
     │  │      AddOrg.vue
     │  │      OrgInfo.vue
     │  │      OrgManagement.vue
     │  │
-    │  └─roleManager
+    │  └─roleManager          // 角色管理类
     │      │  roleManager.vue
     │      │
     │      ├─roleFunc
